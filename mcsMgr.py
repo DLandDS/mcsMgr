@@ -2,6 +2,7 @@ import yaml
 import sys
 import os
 from subprocess import run
+from time import sleep
 
 config_file = open("config.yml")
 config = yaml.load(config_file, Loader=yaml.FullLoader)
@@ -29,9 +30,9 @@ def start(server):
         jarfile = config["Servers"][server]["jarfile"]
         maxMem = config["Servers"][server]["maxMem"]
         initMem = config["Servers"][server]["initMem"]
-        print("Starting", server, "server", end ="... ")
+        print("Starting", server, "server", end="... ")
         if(isServerUp(server)):
-            print("Skipped (Already Started)", end ="\n")
+            print("Skipped (Already Started)", end="\n")
         else:
             command += str(screenStart) + str(server) + str(" ")
             command += str(prejar) + str(" ")
@@ -39,17 +40,18 @@ def start(server):
             command += str("-Xmx") + str(maxMem.lower()) + str(" ")
             command += str(postjar) + str(" ") + str(jarfile) + str(" ") + str("nogui")
             exec(command)
+            sleep(1)
+            if (isServerUp(server)):
+                print("Started!", end="")
+            else:
+                print("Failed!", end="")
             print("")
         os.chdir(pwd)
     except:
         print("Server not found")
 
-def startall():
-    for server, info in servers.items():
-        start(server)
-
 def listServer():
-    i = 1;
+    i = 1
     for server, info in servers.items():
         print( i, ". ",server, sep='')
         i+=1
@@ -68,10 +70,11 @@ def status():
     count = 0
     for server, info in servers.items():
         statusData = isServerUp(server)
-        count = count + (0,1)[statusData]
+        count = count + (0, 1)[statusData]
         print(i, ". ", server, " (", ("inactive", "active")[statusData], ")", sep='')
         i += 1
     print(count, "server(s) is active")
+
 def resume(server):
     command = ""
     command += str(screenResume) + str(server)
@@ -81,82 +84,97 @@ def inturrupt(server, signal):
     command = ""
     command += str(screenStop) + str(server) + str(screenStopFlags) + signal
     exec(command)
+    resume(server)
 
 def stop(server):
-    inturrupt(server, "stop^M")
-
-
-def stopall():
-    for server, info in servers.items():
-        stop(server)
-
-def restartall():
-    for server, info in servers.items():
-        restart(server)
+    print("Stopping", server, "server", end="... ")
+    if not(isServerUp(server)):
+        print("Skipped (Already Stopped)", end="\n")
+    else:
+        inturrupt(server, "stop^M")
+        if not(isServerUp(server)):
+            print("Stopped!", end="")
+        else:
+            print("Error!", end="")
+        print("")
 
 def restart(server):
-    inturrupt(server, "restart^M")
+    print("Restarting", server, "server", end="...\n")
+    stop(server)
     start(server)
 
 def kill(server):
-    command = ""
-    command += str(screenKill) + str(server) + str(screenKillSignal)
-    exec(command)
-
-def killall():
-    for server, info in servers.items():
-        kill(server)
+    print("Killing", server, "server", end="... ")
+    if not(isServerUp(server)):
+        print("Skipped (Already dead)", end="\n")
+    else:
+        command = ""
+        command += str(screenKill) + str(server) + str(screenKillSignal)
+        exec(command)
+        sleep(1)
+        if not(isServerUp(server)):
+            print("Killed!", end="")
+        else:
+            print("Error!", end="")
+        print("")
 
 def help():
     print(
-        "mcsMgr is Server Manager Minecraft. It allow you to control your Minecraft screen",
+        "mcsMgr is a toolkit which is allow you to control multiple Minecraft Server session on GNU Screen.",
         "Author  : Dlands/FTAGame",
         "usages  : mcsmgr [command] [argument]",
         "          mcsmgr [server] : to resume sesion",
         "command :",
-        "   start   : Start all server or specific server in argument", #
-        "   list    : List all your server in config.yml", #
-        "   stop    : Send inturrupt signal to screan session server or specific with argument", #
-        "   status  : Show all your server status or specific with argument", #
-        "   restart : Send restart signal all to your server or specific with argument", #
-        "   kill    : force kill all screen session server or specific with argument", #
+        "   start   : Start all server or specific server in argument",
+        "   list    : List all your server in config.yml",
+        "   stop    : Send inturrupt signal to screan session server or specific with argument",
+        "   status  : Show all your server status or specific with argument",
+        "   restart : Send restart signal all to your server or specific with argument",
+        "   kill    : force kill all screen session server or specific with argument",
         sep='\n'
     )
 
+def doall(func, server, message):
+    for server, info in servers.items():
+        func(server)
+    print(message)
+
 def main(argv):
     #print(config)
+    if(len(argv)<=1):
+        help()
+        return 0
     if argv[1] in servers:
         resume(argv[1])
     else :
         if(len(argv)>1):
-            if (argv[1] == "start"):
-                if ((len(argv)) > 2):
+            if argv[1] == "start":
+                if (len(argv)) > 2:
                     start(argv[2])
                 else:
-                    startall()
+                    doall(start, servers, "All server is started")
             elif (argv[1] == "list"):
                 listServer()
             elif (argv[1] == "stop"):
-                if((len(argv))>2):
+                if(len(argv)>2):
                     stop(argv[2])
                 else:
-                    stopall()
+                    doall(stop, servers, "All server is stopped")
             elif (argv[1] == "status"):
                 status()
             elif (argv[1] == "restart"):
-                if ((len(argv)) > 2):
+                if (len(argv) > 2):
                     restart(argv[2])
                 else:
-                    restartall()
+                    doall(restart, servers, "All server is restarted")
             elif (argv[1] == "kill"):
-                if((len(argv))>2):
+                if(len(argv)>2):
                     kill(argv[2])
                 else:
-                    killall()
+                    doall(kill, servers, "All server is dead")
             else:
                 print("The", argv[1], "command is unkown")
                 help()
-        else:
-            help()
+
 if __name__ == '__main__':
     main(sys.argv)
