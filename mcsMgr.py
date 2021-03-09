@@ -22,6 +22,14 @@ def exec(command):
     #print(command)
     os.system(command)
 
+def getFlags(server):
+    flags = ""
+    try:
+        flags = config["Servers"][server]["flags"]
+        return flags
+    except:
+        return flags
+
 def start(server):
     try:
         pwd = os.getcwd()
@@ -38,6 +46,7 @@ def start(server):
             command += str(prejar) + str(" ")
             command += str("-Xms") + str(initMem.lower()) + str(" ")
             command += str("-Xmx") + str(maxMem.lower()) + str(" ")
+            command += str(getFlags(server)) + str(" ")
             command += str(postjar) + str(" ") + str(jarfile) + str(" ") + str("nogui")
             exec(command)
             sleep(1)
@@ -91,7 +100,7 @@ def stop(server):
     if not(isServerUp(server)):
         print("Skipped (Already Stopped)", end="\n")
     else:
-        inturrupt(server, "stop^M")
+        inturrupt(server, "^C")
         if not(isServerUp(server)):
             print("Stopped!", end="")
         else:

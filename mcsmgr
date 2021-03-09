@@ -1,2 +1,4 @@
 #!/bin/bash
+path=$(realpath $(which mcsmgr))
+cd ${path//mcsmgr}
 python mcsMgr.py "$@"
