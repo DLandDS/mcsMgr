@@ -1,0 +1,10 @@
+Servers :
+  Survival :
+    jarfile : paper.jar
+    maxMem : 512M
+    initMem : 512M
+  Lobby :
+    jarfile : paper.jar
+    maxMem : 512M
+    initMem : 512M
+ScreenPrefixId : mc_
