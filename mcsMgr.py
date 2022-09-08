@@ -3,6 +3,7 @@ import sys
 import os
 from subprocess import run
 from time import sleep
+import traceback
 
 config_file = open("config.yml")
 config = yaml.load(config_file, Loader=yaml.FullLoader)
@@ -31,15 +32,20 @@ def getFlags(server):
         return flags
 
 def start(server):
+    global prejar
     try:
         pwd = os.getcwd()
         os.chdir(server)
         command = ""
+        if "runtime" in config["Servers"][server]:
+            customRuntime = config["Servers"][server]["runtime"]
+            prejar = customRuntime
         jarfile = config["Servers"][server]["jarfile"]
         maxMem = config["Servers"][server]["maxMem"]
         initMem = config["Servers"][server]["initMem"]
         print("Starting", server, "server", end="... ")
         if(isServerUp(server)):
+        # if(False):
             print("Skipped (Already Started)", end="\n")
         else:
             command += str(screenStart) + str(server) + str(" ")
@@ -56,8 +62,9 @@ def start(server):
                 print("Failed!", end="")
             print("")
         os.chdir(pwd)
-    except:
+    except Exception as e:
         print("Server not found")
+        traceback.print_exc()
 
 def listServer():
     i = 1

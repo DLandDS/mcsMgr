@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2046
 path=$(realpath $(which mcsmgr))
+# shellcheck disable=SC2164
 cd ${path//mcsmgr}
 python mcsMgr.py "$@"
