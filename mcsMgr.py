@@ -4,6 +4,7 @@ import os
 from subprocess import run
 from time import sleep
 import traceback
+from subprocess import PIPE
 
 config_file = open("config.yml")
 config = yaml.load(config_file, Loader=yaml.FullLoader)
@@ -75,7 +76,7 @@ def listServer():
 def isServerUp(server):
     up = False
     target = str(screenPrefix) + str(server)
-    sessionData = run(screenList, capture_output=True).stdout.decode("utf-8").split("\n")
+    sessionData = run(screenList, stdout=PIPE, stderr=PIPE).stdout.decode("utf-8").split("\n")
     for i in sessionData:
         if i.find(target)>0:
             up = True
